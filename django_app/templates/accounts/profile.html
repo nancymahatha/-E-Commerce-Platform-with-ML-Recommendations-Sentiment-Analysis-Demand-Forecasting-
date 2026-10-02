@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ STR.site_name }}: {{ STR.profile }}{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">{{ STR.welcome }}, {{ request.user.username }}!</h1>
+  <div class="notice" style="max-width:420px;">
+    <p><strong>{{ STR.profile }}</strong></p>
+    <p class="muted">{{ STR.role }}: {% trn 'role' profile.role default=profile.role %}</p>
+    <p><a href="{% url 'orders:history' %}">{{ STR.order_history }}</a></p>
+    {% if is_staff_role %}
+      <p><a href="{% url 'accounts:demand_dashboard' %}">{{ STR.dashboard }}</a></p>
+    {% endif %}
+    {% if user.is_staff %}
+      <p><a href="/admin/">Django Admin</a></p>
+    {% endif %}
+  </div>
+{% endblock %}

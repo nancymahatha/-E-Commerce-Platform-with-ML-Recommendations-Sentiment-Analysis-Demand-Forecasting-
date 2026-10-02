@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% load shop_extras static %}
+
+{% block title %}{{ STR.site_name }}: {{ STR.tagline }}{% endblock %}
+
+{% block content %}
+  {# ===================== HERO (split, with trust icons) ===================== #}
+  <section class="hero-home">
+    <div class="hero-bg" style="background-image:url('{% static 'img/products/skincare.jpg' %}');"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-inner">
+      <p class="eyebrow">{{ STR.tagline }}</p>
+      <h1>{{ STR.hero_title_1 }}<br>{{ STR.hero_title_2 }}</h1>
+      <p class="hero-sub">{{ STR.hero_sub }}</p>
+      <div class="hero-cta">
+        <a href="{% url 'products:shop' %}" class="btn btn-lg">{{ STR.shop_now }} &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  {# ===================== CATEGORY CIRCLES ===================== #}
+  <section id="categories" class="hp-cats">
+    <div class="hp-cat-grid">
+      {% for c in categories %}
+        {% with cimg='img/products/'|add:c.slug|add:'.jpg' %}
+        {% trn 'category' c.slug default=c.name as cname %}
+        <a class="hp-cat" href="{% url 'products:shop' %}?category={{ c.slug }}">
+          <div class="hp-cat-img" style="background:linear-gradient(135deg, var(--accent), var(--accent-2));">
+            <img src="{% static cimg %}" alt="{{ cname }}" loading="lazy" onerror="this.style.display='none'">
+          </div>
+          <h3 class="hp-cat-name">{{ cname }}</h3>
+          <span class="hp-cat-link">{{ STR.shop_now }} &rarr;</span>
+        </a>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ===================== BEST SELLERS ===================== #}
+  {% if popular_products %}
+  <section class="hp-bestsellers">
+    <h2 class="section-title" style="text-align:center;">{{ STR.best_sellers }}</h2>
+    <div class="bs-grid">
+      {% for p in popular_products|slice:":4" %}
+        <div class="bs-card">
+          {% if forloop.counter == 1 %}<span class="bs-badge">{{ STR.badge_best }}</span>
+          {% elif forloop.counter == 3 or forloop.counter == 4 %}<span class="bs-badge">{{ STR.badge_new }}</span>{% endif %}
+          <a href="{% url 'products:product_detail' p.pk %}">
+            <div class="thumb" style="background:linear-gradient(135deg, {{ p.accent }}, #b08968);">
+              {% with img=p|product_img %}
+                {% if img %}<img src="{% static img %}" alt="{{ p.name }}" loading="lazy" onerror="this.style.display='none'">{% endif %}
+              {% endwith %}
+            </div>
+          </a>
+          <div class="bs-body">
+            <div class="card-name"><a href="{% url 'products:product_detail' p.pk %}">{{ p.name }}</a></div>
+            <div class="card-price">{{ p.price|nrs }}</div>
+            <form method="post" action="{% url 'cart:add' %}">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ p.pk }}">
+              <input type="hidden" name="quantity" value="1">
+              <button class="bs-add" type="submit">{{ STR.add_to_cart }}</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ===================== BENEFITS ROW ===================== #}
+  <section class="benefits-row">
+    <div class="benefit">
+      <div class="benefit-ico">&#10047;</div>
+      <h3>{{ STR.benefit_1_t }}</h3>
+      <p>{{ STR.benefit_1_d }}</p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-ico">&#10003;</div>
+      <h3>{{ STR.benefit_2_t }}</h3>
+      <p>{{ STR.benefit_2_d }}</p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-ico">&#9829;</div>
+      <h3>{{ STR.benefit_3_t }}</h3>
+      <p>{{ STR.benefit_3_d }}</p>
+    </div>
+    <div class="benefit">
+      <div class="benefit-ico">&#9851;</div>
+      <h3>{{ STR.benefit_4_t }}</h3>
+      <p>{{ STR.benefit_4_d }}</p>
+    </div>
+  </section>
+
+  {# ===================== OUR STORY ===================== #}
+  <section class="story">
+    <div class="story-media" style="background:linear-gradient(135deg, var(--accent), var(--accent-2));">
+      <img src="{% static 'img/products/makeup.jpg' %}" alt="Our Story" loading="lazy" onerror="this.style.display='none'">
+    </div>
+    <div class="story-text">
+      <p class="eyebrow">{{ STR.story_eyebrow }}</p>
+      <h2>{{ STR.story_title }}</h2>
+      <p class="muted">{{ STR.story_p1 }}</p>
+      <p class="muted">{{ STR.story_p2 }}</p>
+      <a href="{% url 'products:shop' %}" class="btn btn-soft">{{ STR.story_cta }} &rarr;</a>
+    </div>
+  </section>
+
+  {# ===================== TESTIMONIALS (with leaf accents) ===================== #}
+  <section class="hp-reviews">
+    <span class="leaf leaf-tl">&#127811;</span>
+    <span class="leaf leaf-br">&#127811;</span>
+    <h2 class="section-title" style="text-align:center;">{{ STR.testimonials_title }}</h2>
+    <div class="review-grid">
+      {% for t in testimonials %}
+        <div class="t-card">
+          <div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p class="t-quote">&ldquo;{{ t.text }}&rdquo;</p>
+          <div class="t-author">{{ t.user.username }}</div>
+        </div>
+      {% empty %}
+        <div class="t-card"><div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="t-quote">&ldquo;{{ STR.t1_quote }}&rdquo;</p><div class="t-author">{{ STR.t1_author }}</div></div>
+        <div class="t-card"><div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="t-quote">&ldquo;{{ STR.t2_quote }}&rdquo;</p><div class="t-author">{{ STR.t2_author }}</div></div>
+        <div class="t-card"><div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="t-quote">&ldquo;{{ STR.t3_quote }}&rdquo;</p><div class="t-author">{{ STR.t3_author }}</div></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ===================== BRAND BAND ===================== #}
+  <section class="hp-news">
+    <span class="leaf leaf-tl">&#127811;</span>
+    <span class="leaf leaf-br">&#127811;</span>
+    <h2>{{ STR.stay_glowing }}</h2>
+    <p class="muted">{{ STR.brand_promise }}</p>
+    <p style="margin-top:18px;">
+      <a class="btn" href="{% url 'products:shop' %}">{{ STR.shop_now }}</a>
+    </p>
+  </section>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "store_admin/_base.html" %}
+{% block admin_content %}
+
+<div class="adm-card">
+  <h2 class="section-title" style="margin-top:0;">
+    {% if mode == 'create' %}Add a product{% else %}Edit “{{ product.name }}”{% endif %}
+  </h2>
+  <p class="muted" style="margin-top:-6px;">
+    {% if mode == 'create' %}Fill in the details below and press Save.{% else %}Change anything and press Save.{% endif %}
+  </p>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <p class="err" style="color:#a32d2d;">{{ form.non_field_errors }}</p>
+    {% endif %}
+
+    {% for field in form %}
+    <div class="fld">
+      <label for="{{ field.id_for_label }}">
+        {{ field.label }}{% if field.field.required %} <span style="color:#a32d2d;">*</span>{% endif %}
+      </label>
+      {{ field }}
+      {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+      {% for e in field.errors %}<div class="err">{{ e }}</div>{% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="form-actions">
+      <button class="btn" type="submit">{% if mode == 'create' %}Save product{% else %}Save changes{% endif %}</button>
+      <a class="muted" href="{% url 'products:admin_list' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

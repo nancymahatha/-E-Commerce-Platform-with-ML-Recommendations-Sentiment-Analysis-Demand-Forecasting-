@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ STR.site_name }}: {{ STR.order_history }}{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">{{ STR.order_history }}</h1>
+  {% if orders %}
+    <table>
+      <thead><tr><th>#</th><th>{{ STR.total }}</th><th>{{ STR.status }}</th><th>{{ STR.date }}</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+          <tr>
+            <td><a href="{% url 'orders:detail' o.pk %}">#{{ o.pk }}</a></td>
+            <td>{{ o.total|nrs }}</td>
+            <td>{% trn 'status' o.status default=o.status %}</td>
+            <td class="muted">{{ o.created_at|date:"Y-m-d H:i" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="notice">{{ STR.no_orders }}</p>
+  {% endif %}
+{% endblock %}

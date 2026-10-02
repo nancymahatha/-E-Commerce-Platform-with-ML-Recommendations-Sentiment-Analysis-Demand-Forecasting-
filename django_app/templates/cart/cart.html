@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ STR.site_name }}: {{ STR.your_cart }}{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">{{ STR.your_cart }}</h1>
+
+  {% if cart.items.all %}
+    <table>
+      <thead><tr><th>{{ STR.shop }}</th><th>{{ STR.price }}</th><th>{{ STR.qty }}</th><th></th></tr></thead>
+      <tbody>
+        {% for item in cart.items.all %}
+          <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.product.price|nrs }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>
+              <form method="post" action="{% url 'cart:remove' item.id %}" style="display:inline;">
+                {% csrf_token %}
+                <button class="btn btn-soft" type="submit" title="{{ STR.remove }}">✕</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="margin-top:18px;" class="row">
+      <h3>{{ STR.total }}: {{ cart.total|nrs }}</h3>
+      <form method="post" action="{% url 'orders:checkout' %}" style="margin-left:auto;">
+        {% csrf_token %}
+        <button class="btn" type="submit">{{ STR.checkout }}</button>
+      </form>
+    </div>
+  {% else %}
+    <p class="notice">{{ STR.empty_cart }}</p>
+  {% endif %}
+{% endblock %}

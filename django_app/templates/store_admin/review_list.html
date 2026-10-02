@@ -1,0 +1,53 @@
+{% extends "store_admin/_base.html" %}
+{% block admin_content %}
+
+<div class="adm-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <h2 class="section-title" style="margin:0;">Reviews</h2>
+    <form method="get">
+      <select name="mood" onchange="this.form.submit()" style="padding:8px 10px;border:1px solid var(--border);border-radius:8px;">
+        <option value="">All moods</option>
+        <option value="positive" {% if mood == 'positive' %}selected{% endif %}>Positive</option>
+        <option value="neutral" {% if mood == 'neutral' %}selected{% endif %}>Neutral</option>
+        <option value="negative" {% if mood == 'negative' %}selected{% endif %}>Negative</option>
+      </select>
+    </form>
+  </div>
+
+  {% if reviews %}
+  <table class="adm-table" style="margin-top:14px;">
+    <thead>
+      <tr><th>Product</th><th class="hide-sm">Customer</th><th>Rating</th><th>Mood</th><th>Confidence</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for r in reviews %}
+      <tr>
+        <td>{{ r.product.name }}</td>
+        <td class="hide-sm">{{ r.user.username }}</td>
+        <td>{% if r.rating %}★{% endif %} {{ r.rating }}</td>
+        <td>
+          {% if r.sentiment_label %}
+          <span class="pill pill-{{ r.sentiment_label|slice:'0:3' }}">{{ r.sentiment_label|title }}</span>
+          {% else %}-{% endif %}
+        </td>
+        <td>{{ r.sentiment_confidence|floatformat:2 }}</td>
+        <td style="text-align:right;">
+          <form method="post" action="{% url 'products:admin_review_delete' r.pk %}"
+                onsubmit="return confirm('Delete this review permanently?');" style="display:inline;">
+            {% csrf_token %}
+            <button class="act act-danger" type="submit"
+                    style="background:none;border:none;cursor:pointer;font:inherit;padding:0;">Delete</button>
+          </form>
+        </td>
+      </tr>
+      <tr><td colspan="6" style="border-top:none;padding-top:0;">
+        <p class="muted" style="margin:0;font-size:13px;">{{ r.text }}</p>
+      </td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No reviews yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

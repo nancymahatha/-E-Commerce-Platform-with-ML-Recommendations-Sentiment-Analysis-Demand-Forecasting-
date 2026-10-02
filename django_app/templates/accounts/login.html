@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ STR.site_name }}: {{ STR.login }}{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">{{ STR.login }}</h1>
+  <form method="post" style="max-width:360px;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-block" type="submit">{{ STR.login }}</button>
+  </form>
+  <p class="muted" style="margin-top:14px;">{{ STR.register }}? <a href="{% url 'accounts:register' %}">{{ STR.register }}</a></p>
+{% endblock %}

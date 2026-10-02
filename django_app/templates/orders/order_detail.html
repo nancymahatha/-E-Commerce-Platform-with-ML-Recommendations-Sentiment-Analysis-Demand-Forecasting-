@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ STR.site_name }}: #{{ order.pk }}{% endblock %}
+
+{% block content %}
+  <h1 class="page-title">#{{ order.pk }}</h1>
+  <p class="muted">{{ order.created_at|date:"Y-m-d H:i" }} · {% trn 'status' order.status default=order.status %}</p>
+
+  <table>
+    <thead><tr><th>{{ STR.shop }}</th><th>{{ STR.qty }}</th><th>{{ STR.price }}</th></tr></thead>
+    <tbody>
+      {% for it in order.items.all %}
+        <tr>
+          <td>{{ it.name }}</td>
+          <td>{{ it.quantity }}</td>
+          <td>{{ it.price|nrs }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <h3 style="text-align:right;">{{ STR.total }}: {{ order.total|nrs }}</h3>
+  <p><a href="{% url 'orders:history' %}">← {{ STR.order_history }}</a></p>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "store_admin/_base.html" %}
+{% load shop_extras static %}
+{% block admin_content %}
+
+<div class="adm-stats">
+  <div class="adm-stat"><b>{{ counts.products }}</b><span>Products</span></div>
+  <div class="adm-stat"><b>{{ counts.categories }}</b><span>Categories</span></div>
+</div>
+
+<div class="adm-card">
+  <h2 class="section-title" style="margin-top:0;">What would you like to do?</h2>
+  <div class="adm-actions">
+    <a class="btn" href="{% url 'products:admin_create' %}">+ Add a product</a>
+    <a class="btn btn-soft" href="{% url 'products:admin_list' %}">Manage products</a>
+    <a class="btn btn-soft" href="{% url 'products:admin_categories' %}">Manage categories</a>
+    <a class="btn btn-soft" href="{% url 'products:admin_orders' %}">View orders</a>
+    <a class="btn btn-soft" href="{% url 'products:admin_reviews' %}">Moderate reviews</a>
+  </div>
+</div>
+
+<div class="adm-card">
+  <h2 class="section-title" style="margin-top:0;">Recently added products</h2>
+  {% if recent_products %}
+  <table class="adm-table">
+    <thead><tr><th>Name</th><th class="hide-sm">Category</th><th>Price</th><th>Stock</th><th></th></tr></thead>
+    <tbody>
+      {% for p in recent_products %}
+      <tr>
+        <td><span class="swatch" style="background:{{ p.accent }};"></span> {{ p.name }}</td>
+        <td class="hide-sm">{{ p.category.name|default:"-" }}</td>
+        <td>{{ p.price|nrs }}</td>
+        <td>{{ p.stock }}</td>
+        <td style="text-align:right;">
+          <a class="act" href="{% url 'products:admin_edit' p.pk %}">Edit</a>
+          <a class="act act-danger" href="{% url 'products:admin_delete' p.pk %}">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No products yet. <a href="{% url 'products:admin_create' %}">Add your first product →</a></p>
+  {% endif %}
+</div>
+
+<style>.adm-actions{display:flex;gap:10px;flex-wrap:wrap;}</style>
+
+{% endblock %}

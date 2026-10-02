@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load shop_extras %}
+{% block title %}{{ STR.site_name }}: Store admin{% endblock %}
+
+{% block content %}
+<div class="adm">
+  <header class="adm-head">
+    <div>
+      <h1 class="page-title">Store admin</h1>
+      <p class="page-sub">Add, edit and remove your shop's content, right here on the site.</p>
+    </div>
+    <span class="adm-chip">STAFF ONLY</span>
+  </header>
+
+  <nav class="adm-tabs">
+    <a class="{% if request.resolver_match.url_name == 'admin_home' %}active{% endif %}"
+       href="{% url 'products:admin_home' %}">Overview</a>
+    <a class="{% if 'product' in request.resolver_match.url_name %}active{% endif %}"
+       href="{% url 'products:admin_list' %}">Products</a>
+    <a class="{% if 'categor' in request.resolver_match.url_name %}active{% endif %}"
+       href="{% url 'products:admin_categories' %}">Categories</a>
+    <a class="{% if 'order' in request.resolver_match.url_name %}active{% endif %}"
+       href="{% url 'products:admin_orders' %}">Orders</a>
+    <a class="{% if 'review' in request.resolver_match.url_name %}active{% endif %}"
+       href="{% url 'products:admin_reviews' %}">Reviews</a>
+    <a class="adm-tabs-right" href="{% url 'accounts:demand_dashboard' %}">Forecast dashboard &rarr;</a>
+  </nav>
+
+  {% block admin_content %}{% endblock %}
+</div>
+
+<style>
+  .adm{max-width:1080px;margin:0 auto;}
+  .adm-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 14px;}
+  .adm-chip{background:#9c6f52;color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;letter-spacing:.5px;}
+  .adm-tabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);margin-bottom:18px;padding-bottom:2px;}
+  .adm-tabs a{padding:8px 14px;border-radius:8px 8px 0 0;font-size:14px;color:var(--muted);text-decoration:none;}
+  .adm-tabs a:hover{background:var(--bg);color:var(--text);text-decoration:none;}
+  .adm-tabs a.active{background:var(--bg);color:var(--accent-ink);font-weight:600;box-shadow:inset 0 -2px 0 var(--accent);}
+  .adm-tabs-right{margin-left:auto;font-size:13px;}
+  .adm-card{background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:14px;padding:18px;margin-bottom:18px;}
+  .adm-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
+  .adm-toolbar input,.adm-toolbar select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:14px;}
+  .adm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:18px;}
+  .adm-stat{background:#fff;border:1px solid rgba(0,0,0,0.06);border-radius:12px;padding:16px;}
+  .adm-stat b{display:block;font-size:26px;color:#9c6f52;line-height:1.1;}
+  .adm-stat span{font-size:12px;color:var(--muted);}
+  table.adm-table{width:100%;border-collapse:collapse;font-size:14px;}
+  table.adm-table th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--border);}
+  table.adm-table td{padding:10px;border-bottom:1px solid rgba(0,0,0,0.05);vertical-align:middle;}
+  table.adm-table tr:hover td{background:#faf7f4;}
+  .swatch{display:inline-block;width:16px;height:16px;border-radius:4px;border:1px solid #ccc;vertical-align:-3px;}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:600;}
+  .pill-paid{background:#eaf3de;color:#27500a;}
+  .pill-pending{background:#f3efe6;color:#6b5b4f;}
+  .pill-shipped{background:#e6eefb;color:#1f4e9c;}
+  .pill-pos{background:#eaf3de;color:#27500a;}
+  .pill-neu{background:#f3efe6;color:#6b5b4f;}
+  .pill-neg{background:#fbe6e6;color:#a32d2d;}
+  .act{font-size:13px;margin-right:10px;}
+  .act-danger{color:#a32d2d;}
+  .empty{color:var(--muted);padding:18px 4px;}
+  .fld{margin-bottom:16px;}
+  .fld label{display:block;font-size:13px;font-weight:600;margin-bottom:4px;}
+  .fld .help{font-size:12px;color:var(--muted);margin-top:3px;}
+  .fld input,.fld select,.fld textarea{width:100%;max-width:460px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;}
+  .fld .err{color:#a32d2d;font-size:12px;margin-top:3px;}
+  .form-actions{margin-top:8px;display:flex;gap:10px;align-items:center;}
+  @media(max-width:640px){table.adm-table{font-size:13px;}table.adm-table .hide-sm{display:none;}}
+</style>
+{% endblock %}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ STR.site_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="theme-{{ theme }}">
+
+  <header class="site-header">
+    <div class="nav">
+      <a href="/" class="brand">{{ STR.site_name }}<small>{{ STR.tagline }}</small></a>
+
+      <nav class="nav-links">
+        <a href="{% url 'products:shop' %}">{{ STR.shop }}</a>
+        <a href="{% url 'cart:cart' %}">{{ STR.cart }}{% if cart_count %} <span class="cart-pill">{{ cart_count }}</span>{% endif %}</a>
+        {% if is_staff_role %}
+          <a href="{% url 'accounts:demand_dashboard' %}">{{ STR.dashboard }}</a>
+          <a href="{% url 'products:admin_home' %}">Store admin</a>
+        {% endif %}
+      </nav>
+
+      <div class="nav-right">
+        {# language toggle (English / नेपाली) #}
+        <div class="toggle-group" title="{{ STR.language }}">
+          <a href="/accounts/set-language/?lang=en&next={{ request.path }}" class="{% if lang == 'en' %}active{% endif %}">EN</a>
+          <a href="/accounts/set-language/?lang=ne&next={{ request.path }}" class="{% if lang == 'ne' %}active{% endif %}">नेपाली</a>
+        </div>
+
+        {% if user.is_authenticated %}
+          <a href="{% url 'accounts:profile' %}">{{ STR.profile }}</a>
+          {# Django 5+ requires logout via POST, so we use a tiny form styled as a link. #}
+          <form method="post" action="{% url 'accounts:logout' %}" class="logout-form">
+            {% csrf_token %}
+            <button type="submit" class="linklike">{{ STR.logout }}</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}">{{ STR.login }}</a>
+          <a href="{% url 'accounts:register' %}">{{ STR.register }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    {% if messages %}
+      {% for m in messages %}<div class="notice">{{ m }}</div>{% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">{{ STR.powered_by }}</footer>
+</body>
+</html>

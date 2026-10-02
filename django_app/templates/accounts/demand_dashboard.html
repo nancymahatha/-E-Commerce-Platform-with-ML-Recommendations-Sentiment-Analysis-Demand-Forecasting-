@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load shop_extras static %}
+
+{% block title %}{{ STR.site_name }}: {{ STR.demand_forecast }}{% endblock %}
+
+{% block content %}
+<style>
+  .dash{max-width:1060px;margin:0 auto;}
+  .dash-head{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px;flex-wrap:wrap;gap:10px;}
+  .panel{background:var(--color-background-secondary,#faf6f1);border:1px solid rgba(0,0,0,0.06);border-radius:14px;padding:18px;margin-bottom:18px;}
+  .health-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .hc{padding:14px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:10px;}
+  .hc-name{font-weight:500;font-size:14px;color:#3a2e26;}
+  .hc-type{font-size:12px;color:#9a8a7d;margin:2px 0 8px;}
+  .hc-metric{font-size:12px;color:#6b5b4f;line-height:1.5;word-break:break-word;}
+  .hc-status{font-size:11px;margin-top:8px;font-weight:500;}
+  .hc-status.ok{color:#3b6d11;}
+  .hc-status.bad{color:#a32d2d;}
+  .result-grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start;}
+  .result-meta{display:flex;flex-direction:column;gap:12px;}
+  .prod-row{display:flex;gap:12px;align-items:center;}
+  .prod-row .thumb{width:74px;height:74px;flex:0 0 74px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,var(--accent,#d8c3b3),#b08968);}
+  .prod-row .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .hero-mini{background:linear-gradient(135deg,var(--accent,#d8c3b3),#b08968);border-radius:12px;padding:16px;color:#3a2e26;text-align:center;}
+  .hero-mini h1{margin:0;font-size:30px;color:#3a2e26;}
+  .hero-mini p{margin:4px 0 0;font-size:12px;opacity:.8;}
+  .chart-card{background:#fff;border-radius:12px;padding:12px;border:1px solid rgba(0,0,0,0.05);}
+  .sent-grid{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:start;}
+  .badge-staff{background:#9c6f52;color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;letter-spacing:.5px;}
+  .neg-list .review{border-left:3px solid #c98a6a;padding:6px 10px;margin-bottom:8px;background:#fff;border-radius:0 8px 8px 0;}
+  .mgmt-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .mgmt-card{display:block;text-decoration:none;padding:14px 16px;background:#fff;border:1px solid rgba(0,0,0,0.05);border-radius:10px;color:#3a2e26;transition:.15s;}
+  .mgmt-card:hover{border-color:var(--accent,#d8c3b3);transform:translateY(-2px);}
+  .mgmt-num{font-size:26px;font-weight:600;color:#9c6f52;}
+  .mgmt-label{font-size:12px;color:#6b5b4f;margin-top:2px;}
+  .btn-mini{background:#c98a6a;color:#fff;border:none;border-radius:6px;padding:3px 9px;font-size:11px;cursor:pointer;}
+  .btn-mini:hover{background:#b5765a;}
+  @media(max-width:760px){.result-grid,.sent-grid{grid-template-columns:1fr;}.health-grid{grid-template-columns:1fr;}.mgmt-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+
+<div class="dash">
+  <header class="dash-head">
+    <div>
+      <h1 class="page-title">Store dashboard</h1>
+      <p class="page-sub">Everything you need to run your shop, in one place.</p>
+    </div>
+    <span class="badge-staff">STAFF DASHBOARD</span>
+  </header>
+
+  {# ---- Store management (in-site CRUD) ---- #}
+  <section class="panel">
+    <h2 class="section-title">Store management</h2>
+    <p class="muted" style="margin-top:-6px;">Add, edit or remove anything in your shop, right here on the site. Counts are live.</p>
+    <div class="mgmt-grid">
+      <a class="mgmt-card" href="{% url 'products:admin_list' %}"><div class="mgmt-num">{{ mgmt.products }}</div><div class="mgmt-label">Products</div></a>
+      <a class="mgmt-card" href="{% url 'products:admin_reviews' %}"><div class="mgmt-num">{{ mgmt.reviews }}</div><div class="mgmt-label">Reviews</div></a>
+      <a class="mgmt-card" href="{% url 'products:admin_orders' %}"><div class="mgmt-num">{{ mgmt.orders }}</div><div class="mgmt-label">Orders</div></a>
+      <a class="mgmt-card" href="{% url 'products:admin_categories' %}"><div class="mgmt-num">{{ mgmt.categories }}</div><div class="mgmt-label">Categories</div></a>
+    </div>
+    <p style="margin-top:12px;">
+      <a class="btn" href="{% url 'products:admin_home' %}">Open store admin &rarr;</a>
+      <a class="btn btn-soft" href="{% url 'accounts:profile' %}">My profile</a>
+    </p>
+  </section>
+
+  {# ---- Live forecast-engine status (plain language) ---- #}
+  {% if health_cards %}
+  <section class="panel">
+    <h2 class="section-title">Forecast engine: status</h2>
+    <div class="health-grid">
+      {% for c in health_cards %}
+      <div class="hc">
+        <div class="hc-name">{{ c.name }}</div>
+        <div class="hc-type">{{ c.type }}</div>
+        <div class="hc-metric">{{ c.metric }}</div>
+        <div class="hc-status {% if c.ok %}ok{% else %}bad{% endif %}">{% if c.ok %}ready{% else %}offline{% endif %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if health %}<p class="muted" style="margin-top:10px;">Overall: <strong>{{ health.status }}</strong></p>{% endif %}
+  </section>
+  {% endif %}
+
+  {# ---- Forecast query ---- #}
+  <section class="panel">
+    <form method="get" class="row" style="gap:10px;margin-bottom:6px;align-items:flex-end;">
+      <div>
+        <label>{{ STR.store }} (1&ndash;10)</label>
+        <input type="number" name="store" value="{{ store }}" min="1" max="10" style="max-width:120px;">
+      </div>
+      <div>
+        <label>Product</label>
+        <select name="product" style="max-width:260px;">
+          {% for val, name in product_choices %}
+          <option value="{{ val }}" {% if val|stringformat:"s" == product_pk %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn" type="submit" name="run" value="1">Forecast demand</button>
+    </form>
+    <p class="muted">Pick a product to see how many units you are likely to sell over the next 30 days.</p>
+  </section>
+
+  {# ---- Result: product + line chart ---- #}
+  {% if result %}
+  <section class="panel">
+    <h2 class="section-title">Forecast for {% if result_product %}{{ result_product.name }}{% else %}the selected product{% endif %}</h2>
+    {% if result_sku %}
+    <p class="muted" style="margin-top:-6px;">Forecast for the demand profile of this product. Similar products that sell in the same pattern share this forecast.</p>
+    {% endif %}
+    <div class="result-grid">
+      <div class="result-meta">
+        {% if result_product %}
+        <div class="prod-row">
+          {% with img=result_product|product_img %}
+          <div class="thumb">{% if img %}<img src="{% static img %}" alt="{{ result_product.name }}" onerror="this.style.display='none'">{% endif %}</div>
+          {% endwith %}
+          <div>
+            <div class="card-cat">{% if result_product.category %}{% trn 'category' result_product.category.slug default=result_product.category.name %}{% endif %}</div>
+            <div class="card-name">{{ result_product.name }}</div>
+            <div class="card-price">{{ result_product.price|nrs }}</div>
+          </div>
+        </div>
+        {% endif %}
+        <div class="hero-mini">
+          <h1>{{ result.predicted_total_units|floatformat:0 }}</h1>
+          <p>total predicted units &middot; {{ result.start_date }} &rarr; {{ result.end_date }}</p>
+          {% if forecast_basis %}<p style="margin-top:6px;">about {{ forecast_basis.forecast_avg }} a day</p>{% endif %}
+        </div>
+      </div>
+      <div class="chart-card">
+        {{ line_svg|safe }}
+        <p class="muted" style="text-align:center;">Units predicted per day over the next 30 days. Add these 30 daily figures together and you get the total above.</p>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {# ---- The site's OWN sales history ---- #}
+  <section class="panel">
+    <h2 class="section-title">Sales history</h2>
+    <p class="muted" style="margin-top:-6px;">Your real sales from this store.</p>
+    <div class="mgmt-grid" style="margin-bottom:14px;">
+      <div class="mgmt-card"><div class="mgmt-num">{{ sales_total_units }}</div><div class="mgmt-label">Items sold</div></div>
+      <div class="mgmt-card"><div class="mgmt-num">{{ sales_recent_days }}</div><div class="mgmt-label">Days of history</div></div>
+      <div class="mgmt-card"><div class="mgmt-num">{{ sales_avg_per_day }}</div><div class="mgmt-label">Avg items / day</div></div>
+      <div class="mgmt-card"><div class="mgmt-num">{{ mgmt.orders }}</div><div class="mgmt-label">Orders</div></div>
+    </div>
+    <div class="chart-card" style="margin-bottom:14px;">
+      {% if sales_line_svg %}{{ sales_line_svg|safe }}<p class="muted" style="text-align:center;">Items sold per day (last 30 days)</p>
+      {% else %}<p class="muted">No sales yet. Place a test order to see data here.</p>{% endif %}
+    </div>
+    <h3 style="font-size:15px;margin:6px 0 8px;">Best sellers (items sold)</h3>
+    <div class="chart-card">
+      {% if top_seller_svg %}{{ top_seller_svg|safe }}{% else %}<p class="muted">No sales yet.</p>{% endif %}
+    </div>
+  </section>
+
+  {# ---- Sample forecasts ---- #}
+  <section class="panel">
+    <h2 class="section-title">Example demand forecasts</h2>
+    {{ bar_svg|safe }}
+    <div class="grid">
+      {% for s in samples %}
+      <div class="card">
+        {% if s.product %}{% with img=s.product|product_img %}<div class="thumb" style="height:120px;">{% if img %}<img src="{% static img %}" alt="{{ s.product.name }}" onerror="this.style.display='none'">{% endif %}</div>{% endwith %}{% endif %}
+        <div class="card-body">
+          <div class="card-cat">{{ STR.item }}</div>
+          <div class="card-name">{% if s.product %}{{ s.product.name }}{% else %}Item {{ s.item }}{% endif %}</div>
+          <div class="card-price">{{ s.total|floatformat:0 }} units expected</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ---- Admin-only sentiment insight ---- #}
+  <section class="panel">
+    <h2 class="section-title">Customer mood</h2>
+    <div class="sent-grid">
+      <div>{{ donut_svg|safe }}</div>
+      <div class="neg-list">
+        <h3 style="margin:0 0 8px;font-size:15px;">Unhappy reviews that need attention</h3>
+        {% if negative_reviews %}
+          {% for r in negative_reviews %}
+          <div class="review">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+              <div>
+                <strong>{{ r.user.username }}</strong> on {{ r.product.name }}
+                <div class="stars">{% if r.rating %}&#9733;{% endif %} {{ r.rating }} &middot; {{ r.sentiment_label }} &middot; {{ r.sentiment_confidence|floatformat:2 }} confidence</div>
+                <p style="margin:4px 0 0;">{{ r.text }}</p>
+              </div>
+              <form method="post" action="{% url 'accounts:moderate_review' %}" onsubmit="return confirm('Delete this review permanently?');">
+                {% csrf_token %}
+                <input type="hidden" name="review_id" value="{{ r.id }}">
+                <button class="btn-mini" type="submit">Delete</button>
+              </form>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="muted">No unhappy reviews. Nothing needs urgent attention.</p>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

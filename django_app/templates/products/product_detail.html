@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load shop_extras static %}
+{% block title %}{{ STR.site_name }}: {{ product.name }}{% endblock %}
+
+{% block content %}
+  <a href="{% url 'products:shop' %}" class="muted">← {{ STR.shop }}</a>
+
+  <div class="detail" style="margin-top:14px;">
+    <div>
+      {% with img=product|product_img %}
+      <div class="thumb" style="background:linear-gradient(135deg, {{ product.accent }}, #b08968);">
+        {% if img %}<img src="{% static img %}" alt="{{ product.name }}" loading="lazy" onerror="this.style.display='none'">{% endif %}
+      </div>
+      {% endwith %}
+    </div>
+    <div>
+      {% if product.category %}{% trn 'category' product.category.slug default=product.category.name as cname %}<div class="card-cat">{{ cname }}</div>{% endif %}
+      <h1 class="page-title" style="margin:0;">{{ product.name }}</h1>
+      <div class="stars" style="margin:6px 0;">{% if product.rating %}★{% endif %} {{ product.rating }} · {{ reviews|length }} {{ STR.reviews }}</div>
+      <div class="card-price" style="font-size:22px;">{{ product.price|nrs }}</div>
+      <p class="muted">{% if product.category %}{% trn 'description' product.category.slug default=product.description %}{% else %}{{ product.description }}{% endif %}</p>
+
+      <form method="post" action="{% url 'cart:add' %}">
+        {% csrf_token %}
+        <input type="hidden" name="product_id" value="{{ product.pk }}">
+        <input type="hidden" name="quantity" value="1">
+        <button class="btn btn-block">{{ product.price|nrs }} · {{ STR.add_to_cart }}</button>
+      </form>
+    </div>
+  </div>
+
+  {# ---- ML feature 1: recommendations ("You may also like") ---- #}
+  {% if recommended %}
+    <h2 class="section-title">{{ STR.related }}</h2>
+    <div class="grid">
+      {% for p in recommended %}
+        <a class="card" href="{% url 'products:product_detail' p.pk %}">
+          {% with img=p|product_img %}
+          <div class="thumb" style="background:linear-gradient(135deg, {{ p.accent }}, #b08968);">
+            {% if img %}<img src="{% static img %}" alt="{{ p.name }}" loading="lazy" onerror="this.style.display='none'">{% endif %}
+          </div>
+          {% endwith %}
+          <div class="card-body">
+            <div class="card-name">{{ p.name }}</div>
+            <div class="card-price">{{ p.price|nrs }}</div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {# ---- Reviews + ML feature 2: sentiment badges ---- #}
+  <h2 class="section-title">{{ STR.reviews }}</h2>
+  {% if user.is_authenticated %}
+    {% if bought %}
+      <p class="notice" style="border-color:#97c459;background:#eaf3de;color:#27500a;">
+        ✓ {{ STR.verified_buyer_note }}
+      </p>
+    {% endif %}
+    <form method="post" action="{% url 'reviews:add' product.pk %}" style="margin-bottom:18px;">
+      {% csrf_token %}
+      <label>{{ STR.rating }} (1 to 5)</label>
+      <input type="number" name="rating" min="1" max="5" value="5" style="max-width:120px;">
+      <label>{% if has_reviewed %}{{ STR.edit_your_review }}{% else %}{{ STR.write_review }}{% endif %}</label>
+      <textarea name="text" rows="3" placeholder="{{ STR.review_ph }}"></textarea>
+      <button class="btn" type="submit">{% if has_reviewed %}{{ STR.update_review }}{% else %}{{ STR.write_review }}{% endif %}</button>
+    </form>
+  {% else %}
+    <p class="notice">{{ STR.sign_in_required }} <a href="{% url 'accounts:login' %}">{{ STR.login }}</a></p>
+  {% endif %}
+
+  {% if reviews %}
+    <p class="muted" style="font-size:13px;">
+      {% if verified_count %}{{ verified_count }} {{ STR.verified_reviews }}{% endif %}
+    </p>
+  {% endif %}
+
+  {# ---- Staff/admin only: at-a-glance sentiment summary for this product ---- #}
+  {% if is_staff_role and reviews %}
+    <div class="staff-insight">
+      <div class="staff-insight-head">
+        <span class="staff-insight-tag">{{ STR.staff_insight }}</span>
+        <span class="staff-insight-sub">{{ STR.sentiment_gist }}</span>
+      </div>
+      <div class="staff-insight-body">
+        <span class="badge badge-pos">{{ sentiment_summary.positive }} {{ STR.positive }}</span>
+        <span class="badge badge-neu">{{ sentiment_summary.neutral }} {{ STR.neutral }}</span>
+        <span class="badge badge-neg">{{ sentiment_summary.negative }} {{ STR.negative }}</span>
+        <span class="staff-insight-note">{{ STR.avg_confidence }} {{ sentiment_summary.avg_confidence|floatformat:2 }}</span>
+        {% if sentiment_summary.negative %}
+          <span class="staff-insight-flag">⚠ {{ STR.needs_attention }}</span>
+        {% else %}
+          <span class="staff-insight-ok">✓ {{ STR.no_negatives }}</span>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  {% for r in reviews %}
+    <div class="review">
+      <div class="review-head">
+        <strong>{{ r.user.username }}</strong>
+        {% if r.verified_purchase %}<span class="badge badge-verified">✓ {{ STR.verified_purchase }}</span>{% endif %}
+        {% if is_staff_role %}
+          {% trn 'sentiment' r.sentiment_label default=r.sentiment_label as slabel %}
+          <span class="badge badge-{{ r.sentiment_label|slice:'0:3' }}">{{ slabel }}</span>
+          <span class="staff-conf">{{ r.sentiment_confidence|floatformat:2 }}</span>
+        {% endif %}
+      </div>
+      <div class="stars">{% if r.rating %}★{% endif %} {{ r.rating }}</div>
+      <p>{{ r.text }}</p>
+    </div>
+  {% empty %}
+    <p class="muted">{{ STR.no_reviews }}</p>
+  {% endfor %}
+{% endblock %}

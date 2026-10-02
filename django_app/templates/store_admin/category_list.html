@@ -1,0 +1,31 @@
+{% extends "store_admin/_base.html" %}
+{% block admin_content %}
+
+<div class="adm-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+    <h2 class="section-title" style="margin:0;">Categories</h2>
+    <a class="btn" href="{% url 'products:admin_category_create' %}">+ Add category</a>
+  </div>
+
+  {% if categories %}
+  <table class="adm-table" style="margin-top:14px;">
+    <thead><tr><th>Name</th><th class="hide-sm">Short code</th><th>Products</th><th></th></tr></thead>
+    <tbody>
+      {% for c in categories %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td class="hide-sm"><code>{{ c.slug }}</code></td>
+        <td>{{ c.product_set.count }}</td>
+        <td style="text-align:right;white-space:nowrap;">
+          <a class="act" href="{% url 'products:admin_category_edit' c.pk %}">Edit</a>
+          <a class="act act-danger" href="{% url 'products:admin_category_delete' c.pk %}">Delete</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No categories yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

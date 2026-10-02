@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ STR.staff_only }}{% endblock %}
+{% block content %}
+  <div class="notice" style="max-width:480px;margin-top:40px;">
+    <h2 class="section-title">{{ STR.staff_only }}</h2>
+    <p class="muted">{{ STR.sign_in_required }}</p>
+  </div>
+{% endblock %}
